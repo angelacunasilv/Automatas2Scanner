@@ -1,40 +1,180 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/webstorm-icon-logo.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WS playground</title>
-  <link rel="stylesheet" href="/style.css">
+  <title>Scanner Léxico Básico</title>
 </head>
 <body>
-<header class="logo">
-  <a href="https://www.jetbrains.com/webstorm/">
-    <img src="/webstorm-logo.svg" alt="WebStorm logo" width="344"
-         height="90">
-  </a>
-</header>
-<main id="app">
-  <h1 class="title">
-    Thank you for trying it out. <br /> Your first project is up and running
-    now.
-  </h1>
-  <section class="counter">
-    <div class="counter-info">
-      <p class="counter-text">Counter is</p>
-      <p class="counter-value" id="counter-value"></p>
+  <h1>Scanner Automatas</h1>
+
+  <!-- Header actions -->
+  <div>
+    <button id="btnExportJson">Exportar JSON</button>
+    <button id="btnExportCsv">Exportar CSV</button>
+    <button id="btnCopyTokens">Copiar al portapapeles</button>
+  </div>
+  <br>
+
+  <!-- KPI Stats Summary Bar as a simple table -->
+  <table border="1" cellpadding="5">
+    <caption><strong>Estadísticas</strong></caption>
+    <tr>
+      <th>Total Tokens</th>
+      <th>Palabras Res.</th>
+      <th>Identificadores</th>
+      <th>Números</th>
+      <th>Cadenas</th>
+      <th>Operadores</th>
+      <th>Asignaciones</th>
+      <th>Delimitadores</th>
+      <th>Errores</th>
+    </tr>
+    <tr>
+      <td id="statTotal" align="center">0</td>
+      <td id="statPr" align="center">0</td>
+      <td id="statId" align="center">0</td>
+      <td id="statNum" align="center">0</td>
+      <td id="statCad" align="center">0</td>
+      <td id="statOp" align="center">0</td>
+      <td id="statAsig" align="center">0</td>
+      <td id="statDelim" align="center">0</td>
+      <td id="statErr" align="center">0</td>
+    </tr>
+  </table>
+  <br>
+
+  <!-- Main layout table containing editor and tokens side by side -->
+  <table border="1" width="100%" cellpadding="10">
+    <tr>
+      <td valign="top" width="50%">
+        <h2>Programa (Código Fuente)</h2>
+        <div>
+          <select id="exampleSelect">
+            <option value="" disabled selected>Cargar Ejemplo...</option>
+          </select>
+          <button id="btnScan">Escanear</button>
+          <button id="btnClear">Limpiar</button>
+        </div>
+        <br>
+        
+        <table border="1" width="100%" cellpadding="5">
+          <tr>
+            <td valign="top" width="30" align="right" bgcolor="#f0f0f0">
+              <div id="lineNumbers" style="font-family: monospace;">1</div>
+            </td>
+            <td valign="top">
+              <textarea
+                id="codeEditor"
+                rows="20"
+                style="width: 100%; border: none; font-family: monospace; padding: 0; margin: 0;"
+                placeholder="Escribe el programa..."></textarea>
+            </td>
+          </tr>
+        </table>
+
+        <br>
+        <label>
+          <input type="checkbox" id="liveScanToggle" checked> Escaneo en tiempo real
+        </label>
+        <br>
+        <div>
+          <span id="lineColCount">Líneas: 1 | Caracteres: 0</span> <br>
+          <span id="scanDuration">0 ms</span>
+        </div>
+      </td>
+
+      <td valign="top" width="50%">
+        <h2>Tokens Reconocidos (Total: <span id="tokenBadgeCount">0</span>)</h2>
+        
+        <div>
+          <input type="text" id="searchToken" placeholder="Buscar lexema...">
+        </div>
+        <br>
+
+        <div id="filterPills">
+          <button class="filter-pill active" data-filter="ALL">Todos</button>
+          <button class="filter-pill" data-filter="PALABRA_RESERVADA">PR</button>
+          <button class="filter-pill" data-filter="IDENTIFICADOR">ID</button>
+          <button class="filter-pill" data-filter="NUMERO">NUM</button>
+          <button class="filter-pill" data-filter="CADENA">CADENA</button>
+          <button class="filter-pill" data-filter="OPERADOR">OPERADOR</button>
+          <button class="filter-pill" data-filter="ASIGNACION">ASIG</button>
+          <button class="filter-pill" data-filter="DELIMITADOR">DELIM</button>
+          <button class="filter-pill" data-filter="ERROR_LEXICO">ERRORES</button>
+        </div>
+        <br>
+
+        <div id="errorBanner" style="display: none; background-color: #ffcccc; border: 1px solid red; padding: 5px; margin-bottom: 10px;">
+          ⚠ <span id="errorMessage"></span>
+        </div>
+
+        <table border="1" width="100%" cellpadding="5">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Tipo de Token</th>
+              <th>Lexema</th>
+              <th>Línea</th>
+              <th>Columna</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody id="tokensTableBody">
+            <tr>
+              <td colspan="6">Ingresa código en el editor para iniciar.</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <br>
+  
+  <!-- Grammar section -->
+  <fieldset>
+    <legend>
+      <h3 id="grammarToggle" style="margin: 0; cursor: pointer;">
+        Especificación Formal de Gramática y Léxico <span id="grammarChevron">▼</span>
+      </h3>
+    </legend>
+    <div id="grammarContent" style="display: none;">
+      <table border="1" cellpadding="10" width="100%">
+        <tr>
+          <td valign="top" width="50%">
+            <h4>Reglas de Producción:</h4>
+            <pre>
+1. PROGRAMA      → INICIO LISTA_DECL FIN
+2. LISTA_DECL    → [ INSTRUCCION ]*
+3. INSTRUCCION   → TIPO IDENTIFICADOR = EXPRESION ; | 
+                   IDENTIFICADOR = EXPRESION ; | 
+                   print ( VALOR ) ; | 
+                   leer ( IDENTIFICADOR ) ; | 
+                   if ( CONDICION ) { LISTA_DECL } | 
+                   while ( CONDICION ) { LISTA_DECL }
+4. TIPO          → int | boolean | string
+5. CONDICION     → EXPRESION OPERADOR EXPRESION
+6. EXPRESION     → VALOR | VALOR OPERADOR VALOR
+7. VALOR         → NUMERO | CADENA | true | false | IDENTIFICADOR</pre>
+          </td>
+          <td valign="top" width="50%">
+            <h4>Componentes Léxicos:</h4>
+            <pre>
+8. IDENTIFICADOR → LETRA [ LETRA | DIGITO ]*
+9. NUMERO        → DIGITO [ DIGITO ]*
+10. CADENA       → " [ CARACTER ]* "
+11. OPERADOR     → @ | # | > | < | == | != | <= | >=
+12. LETRA        → a | b | c | ... | z | A | B | C | ... | Z
+13. CARACTER     → LETRA | DIGITO | " "
+14. DIGITO       → 0 | 1 | ... | 9
+15. ASIGNACIÓN   → =
+16. DELIMITADOR  → ; | ( | ) | { | }</pre>
+          </td>
+        </tr>
+      </table>
     </div>
-    <div class="counter-interaction">
-      <button id="increaseByOne" type="button">+1</button>
-      <button id="increaseByTwo" type="button">+2</button>
-      <button id="decreaseByOne" type="button">-1</button>
-      <button id="decreaseByTwo" type="button">-2</button>
-    </div>
-  </section>
-</main>
-<footer class="technologies">
-  <img src="/technologies.svg" alt="List of supported technologies">
-</footer>
-<script type="module" src="/src/main.ts"></script>
+  </fieldset>
+
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
