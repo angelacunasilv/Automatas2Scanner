@@ -37,4 +37,14 @@ export interface ScannerResult {
   duracionMs: number;
 }
 
+export interface ParseError {
+  mensaje: string;
+  linea: number;
+  columna: number;
+  token?: Token;
+}
 
+export interface ParserResult {
+  errores: ParseError[];
+  exito: boolean;
+}
