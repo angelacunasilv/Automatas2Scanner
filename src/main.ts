@@ -1,7 +1,7 @@
 import './style.css';
 import { Scanner } from './scanner';
 import { Parser } from './parser';
-import { Token, TokenType, ScannerResult, ParserResult } from './types';
+import { ScannerResult, ParserResult } from './types';
 import { EXAMPLES } from './examples';
 
 // Instancias
@@ -16,6 +16,7 @@ const codeEditor = document.getElementById('codeEditor') as HTMLTextAreaElement;
 const lineNumbers = document.getElementById('lineNumbers') as HTMLDivElement;
 const btnTokens = document.getElementById('btnTokens') as HTMLButtonElement;
 const btnParser = document.getElementById('btnParser') as HTMLButtonElement;
+const btnSemantic = document.getElementById('btnSemantic') as HTMLButtonElement;
 const btnClear = document.getElementById('btnClear') as HTMLButtonElement;
 const exampleSelect = document.getElementById('exampleSelect') as HTMLSelectElement;
 
@@ -83,7 +84,7 @@ function runScannerOnly(): void {
 }
 
 // Action: Parser
-function runParserOnly(): void {
+function runParserOnly(enableSemantic: boolean = false): void {
   if (!lastResult) {
     // Si no han corrido el scanner, lo corremos silenciosamente o forzamos
     const code = codeEditor.value;
@@ -92,13 +93,13 @@ function runParserOnly(): void {
   }
 
   // Corremos el parser
-  lastParserResult = parser.parse(lastResult.tokens);
+  lastParserResult = parser.parse(lastResult.tokens, enableSemantic);
 
   if (lastParserResult.exito) {
-    parserOutput.innerHTML = '<strong style="color: green;">La compilación fue exitosa.</strong>\nNo se encontraron errores sintácticos.';
+    parserOutput.innerHTML = `<strong style="color: green;">La compilación ${enableSemantic? 'semántica ' : 'sintáctica '}fue exitosa.</strong>\nNo se encontraron errores ${enableSemantic? 'sintácticos ni semánticos' : 'sintácticos'}.`;
     parserOutput.style.color = 'green';
   } else {
-    let errorHtml = '<strong style="color: red;">Errores de compilación:</strong>\n\n';
+    let errorHtml = `<strong style="color: red;">Errores de compilación ${enableSemantic? '(Sintáctico + Semántico)' : '(Sintáctico)'}:</strong>\n\n`;
     lastParserResult.errores.forEach((err, index) => {
       errorHtml += `${index + 1}. Fila ${err.linea}: ${err.mensaje} ${err.token ? `(cerca de '${err.token.lexema}')` : ''}\n`;
     });
@@ -162,7 +163,8 @@ function setupEventListeners(): void {
   });
 
   btnTokens.addEventListener('click', runScannerOnly);
-  btnParser.addEventListener('click', runParserOnly);
+  btnParser.addEventListener('click', () => runParserOnly(false));
+  btnSemantic.addEventListener('click', () => runParserOnly(true));
 
   btnClear.addEventListener('click', () => {
     codeEditor.value = '';

@@ -1,6 +1,4 @@
 import { Token, TokenType, ScannerResult, ScannerStats } from './types';
-
-// Palabras reservadas según la gramática
 export const PALABRAS_RESERVADAS = new Set<string>([
   'INICIO',
   'FIN',
@@ -15,7 +13,6 @@ export const PALABRAS_RESERVADAS = new Set<string>([
   'false'
 ]);
 
-// Delimitadores según la gramática
 export const DELIMITADORES: Record<string, string> = {
   ';': 'Punto y coma (Fin de instrucción)',
   '(': 'Paréntesis de apertura',
@@ -24,7 +21,6 @@ export const DELIMITADORES: Record<string, string> = {
   '}': 'Llave de cierre (Fin de bloque)'
 };
 
-// Operadores según la gramática: @ | # | > | < | == | != | <= | >=
 export const OPERADORES_DOBLES: Record<string, string> = {
   '==': 'Operador relacional de igualdad',
   '!=': 'Operador relacional de desigualdad',

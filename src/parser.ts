@@ -1,17 +1,21 @@
 import { Token, ParseError, ParserResult } from './types';
+import { SemanticAnalyzer } from './semantic';
 
 export class Parser {
   private tokens: Token[] = [];
   private current: number = 0;
   private errores: ParseError[] = [];
+  private semantic!: SemanticAnalyzer;
 
   constructor() {}
 
-  public parse(tokens: Token[]): ParserResult {
+  public parse(tokens: Token[], enableSemantic: boolean = false): ParserResult {
     // Filtrar errores léxicos para no confundir al parser
     this.tokens = tokens.filter(t => t.tipo !== 'ERROR_LEXICO');
     this.current = 0;
     this.errores = [];
+    this.semantic = new SemanticAnalyzer(this.errores);
+    this.semantic.enabled = enableSemantic;
 
     if (this.tokens.length === 0) {
       return { errores: [], exito: true };
@@ -49,11 +53,15 @@ export class Parser {
 
   // 3. INSTRUCCION
   private instruccion(): void {
-    if (this.matchTipoDato()) {
+    const tipoToken = this.matchTipoDato();
+    if (tipoToken) {
       // TIPO IDENTIFICADOR = EXPRESION ;
       if (this.match('IDENTIFICADOR')) {
+        const idToken = this.previous();
         if (this.match('ASIGNACION', '=')) {
-          this.expresion();
+          const expType = this.expresion();
+          this.semantic.declareVariable(idToken.lexema, tipoToken.lexema, idToken);
+          this.semantic.checkTypeMatch(tipoToken.lexema, expType, idToken);
           this.consumeDelimiter(';', 'Se esperaba ";" al final de la declaración.');
         } else {
           this.addError('Se esperaba "=" después del identificador.');
@@ -65,8 +73,11 @@ export class Parser {
       }
     } else if (this.match('IDENTIFICADOR')) {
       // IDENTIFICADOR = EXPRESION ;
+      const idToken = this.previous();
       if (this.match('ASIGNACION', '=')) {
-        this.expresion();
+        const expType = this.expresion();
+        const expectedType = this.semantic.checkVariable(idToken.lexema, idToken);
+        this.semantic.checkTypeMatch(expectedType, expType, idToken);
         this.consumeDelimiter(';', 'Se esperaba ";" después de la expresión.');
       } else {
         this.addError('Se esperaba "=" para la asignación.');
@@ -90,6 +101,8 @@ export class Parser {
       // leer ( IDENTIFICADOR ) ;
       if (this.match('DELIMITADOR', '(')) {
         if (this.match('IDENTIFICADOR')) {
+          const idToken = this.previous();
+          this.semantic.checkVariable(idToken.lexema, idToken);
           if (this.match('DELIMITADOR', ')')) {
             this.consumeDelimiter(';', 'Se esperaba ";" al final de leer.');
           } else {
@@ -158,44 +171,50 @@ export class Parser {
   }
 
   // 4. TIPO → int | boolean | string
-  private matchTipoDato(): boolean {
-    if (this.isAtEnd()) return false;
+  private matchTipoDato(): Token | null {
+    if (this.isAtEnd()) return null;
     const t = this.peek();
     if (t.tipo === 'PALABRA_RESERVADA' && (t.lexema === 'int' || t.lexema === 'boolean' || t.lexema === 'string')) {
       this.advance();
-      return true;
+      return t;
     }
-    return false;
+    return null;
   }
 
   // 5. CONDICION → EXPRESION OPERADOR EXPRESION
-  private condicion(): void {
+  private condicion(): string {
     this.expresion();
     if (this.match('OPERADOR')) {
       this.expresion();
     } else {
       this.addError('Se esperaba un operador relacional en la condición.');
     }
+    return 'boolean';
   }
 
   // 6. EXPRESION → VALOR | VALOR OPERADOR VALOR
-  private expresion(): void {
-    this.valor();
+  private expresion(): string {
+    const t1 = this.valor();
     // Opcional operador y otro valor (para aritmética básica o lógica según grammar)
     if (this.match('OPERADOR')) {
       this.valor();
     }
+    return t1;
   }
 
   // 7. VALOR → NUMERO | CADENA | true | false | IDENTIFICADOR
-  private valor(): void {
-    if (this.match('NUMERO') || this.match('CADENA') || this.match('IDENTIFICADOR')) {
-      return;
+  private valor(): string {
+    if (this.match('NUMERO')) return 'int';
+    if (this.match('CADENA')) return 'string';
+    if (this.match('IDENTIFICADOR')) {
+      const idToken = this.previous();
+      return this.semantic.checkVariable(idToken.lexema, idToken);
     }
     if (this.match('PALABRA_RESERVADA', 'true') || this.match('PALABRA_RESERVADA', 'false')) {
-      return;
+      return 'boolean';
     }
     this.addError('Se esperaba un valor (Número, Cadena, true, false o Identificador).');
+    return 'unknown';
   }
 
   // Helper functions

@@ -11,6 +11,7 @@
   <div>
     <button id="btnTokens">Tokens</button>
     <button id="btnParser">Parser</button>
+    <button id="btnSemantic">Semántico</button>
     <button id="btnClear">Limpiar Todo</button>
     &nbsp;|&nbsp;
     Ejemplos: 
@@ -54,20 +55,22 @@
           ⚠ <span id="errorMessage"></span>
         </div>
         
-        <table border="1" width="100%" cellpadding="5" cellspacing="0">
-          <thead>
-            <tr bgcolor="#e0e0e0">
-              <th>Tipo de Token</th>
-              <th>Lexema</th>
-              <th>Fila</th>
-            </tr>
-          </thead>
-          <tbody id="tokensTableBody">
-            <tr>
-              <td colspan="3" align="center">Presiona el botón "Tokens" para iniciar.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div style="max-height: 50vh; overflow-y: auto; border: 1px solid #ccc;">
+          <table border="1" width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse; margin: 0; border: none;">
+            <thead>
+              <tr bgcolor="#e0e0e0">
+                <th style="position: sticky; top: 0; background-color: #e0e0e0; border-bottom: 1px solid #ccc; z-index: 1;">Tipo de Token</th>
+                <th style="position: sticky; top: 0; background-color: #e0e0e0; border-bottom: 1px solid #ccc; z-index: 1;">Lexema</th>
+                <th style="position: sticky; top: 0; background-color: #e0e0e0; border-bottom: 1px solid #ccc; z-index: 1;">Fila</th>
+              </tr>
+            </thead>
+            <tbody id="tokensTableBody">
+              <tr>
+                <td colspan="3" align="center">Presiona el botón "Tokens" para iniciar.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </td>
 
       <!-- Bloque 3: Parser -->
