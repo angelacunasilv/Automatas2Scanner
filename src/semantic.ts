@@ -18,6 +18,14 @@ export class SymbolTable {
   public has(name: string): boolean {
     return this.symbols.has(name);
   }
+
+  public getSymbols(): Record<string, string> {
+    const obj: Record<string, string> = {};
+    for (const [key, value] of this.symbols.entries()) {
+      obj[key] = value;
+    }
+    return obj;
+  }
 }
 
 export class SemanticAnalyzer {
@@ -75,5 +83,9 @@ export class SemanticAnalyzer {
         columna: 1
       });
     }
+  }
+
+  public getSymbols(): Record<string, string> {
+    return this.symbolTable.getSymbols();
   }
 }

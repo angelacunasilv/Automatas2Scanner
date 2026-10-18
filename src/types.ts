@@ -47,4 +47,5 @@ export interface ParseError {
 export interface ParserResult {
   errores: ParseError[];
   exito: boolean;
+  simbolos?: Record<string, string>;
 }

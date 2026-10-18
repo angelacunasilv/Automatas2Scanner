@@ -25,7 +25,8 @@ export class Parser {
 
     return {
       errores: this.errores,
-      exito: this.errores.length === 0
+      exito: this.errores.length === 0,
+      simbolos: this.semantic.getSymbols()
     };
   }
 

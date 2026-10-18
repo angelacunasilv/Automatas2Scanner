@@ -46,6 +46,25 @@
           <span id="lineColCount">Líneas: 1 | Caracteres: 0</span> <br>
           Tiempo: <span id="scanDuration">0 ms</span>
         </div>
+        <br>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2>Código Intermedio</h2>
+          <button id="btnDownloadData" style="display: none;">Descargar Código</button>
+        </div>
+        <table border="1" width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+          <thead>
+            <tr bgcolor="#e0e0e0">
+              <th>Variable</th>
+              <th>Directiva</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody id="dataTableBody">
+            <tr>
+              <td colspan="3" align="center">Realiza el análisis semántico para generar variables.</td>
+            </tr>
+          </tbody>
+        </table>
       </td>
 
       <!-- Bloque 2: Tokens -->

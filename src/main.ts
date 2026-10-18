@@ -3,10 +3,12 @@ import { Scanner } from './scanner';
 import { Parser } from './parser';
 import { ScannerResult, ParserResult } from './types';
 import { EXAMPLES } from './examples';
+import { IntermediateCodeGenerator } from './intermediateCodeGenerator';
 
 // Instancias
 const scanner = new Scanner();
 const parser = new Parser();
+let codeGenerator: IntermediateCodeGenerator;
 
 let lastResult: ScannerResult | null = null;
 let lastParserResult: ParserResult | null = null;
@@ -94,6 +96,10 @@ function runParserOnly(enableSemantic: boolean = false): void {
 
   // Corremos el parser
   lastParserResult = parser.parse(lastResult.tokens, enableSemantic);
+
+  if (codeGenerator) {
+    codeGenerator.update(lastParserResult.exito, enableSemantic, lastParserResult.simbolos);
+  }
 
   if (lastParserResult.exito) {
     parserOutput.innerHTML = `<strong style="color: green;">La compilación ${enableSemantic? 'semántica ' : 'sintáctica '}fue exitosa.</strong>\nNo se encontraron errores ${enableSemantic? 'sintácticos ni semánticos' : 'sintácticos'}.`;
@@ -196,4 +202,5 @@ function setupEventListeners(): void {
 document.addEventListener('DOMContentLoaded', () => {
   initExamples();
   setupEventListeners();
+  codeGenerator = new IntermediateCodeGenerator();
 });
