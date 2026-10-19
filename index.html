@@ -12,6 +12,8 @@
     <button id="btnTokens">Tokens</button>
     <button id="btnParser">Parser</button>
     <button id="btnSemantic">Semántico</button>
+    <button id="btnIntermediate">Tabla Intermedia</button>
+    <button id="btnEnsambladorTop">Generar Ensamblador</button>
     <button id="btnClear">Limpiar Todo</button>
     &nbsp;|&nbsp;
     Ejemplos: 
@@ -24,7 +26,7 @@
   <!-- 3 Blocks layout -->
   <table border="1" width="100%" cellpadding="10" cellspacing="0">
     <tr>
-      <!-- Bloque 1: Programa -->
+      <!-- Bloque 1: Programa y Código Intermedio / Ensamblador -->
       <td valign="top" width="33%">
         <h2>1. Programa</h2>
         <table border="1" width="100%" cellpadding="5" cellspacing="0">
@@ -35,36 +37,59 @@
             <td valign="top">
               <textarea
                 id="codeEditor"
-                rows="25"
+                rows="22"
                 style="width: 100%; border: none; font-family: monospace; padding: 0; margin: 0; outline: none; resize: vertical;"
                 placeholder="Escribe el programa aquí..."></textarea>
             </td>
           </tr>
         </table>
         <br>
-        <div style="font-size: 0.9em; color: #555;">
-          <span id="lineColCount">Líneas: 1 | Caracteres: 0</span> <br>
-          Tiempo: <span id="scanDuration">0 ms</span>
+        
+        <!-- Sección de Código Intermedio / Ensamblador abajo a la izquierda -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h2 style="margin: 0;" id="intermediateTitle">Código Intermedio</h2>
+          <div style="display: flex; gap: 5px;">
+            <button id="btnShowIntermediate">Mostrar Tabla</button>
+            <button id="btnEnsamblador">Generar Ensamblador</button>
+            <button id="btnCopyAsm">Copiar</button>
+          </div>
         </div>
-        <br>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h2>Código Intermedio</h2>
-          <button id="btnDownloadData" style="display: none;">Descargar Código</button>
+        
+        <!-- Vista 1: Tabla de variables Data -->
+        <div id="dataTableContainer" style="max-height: 250px; overflow-y: auto;">
+          <table id="dataTable" border="1" width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+            <thead>
+              <tr bgcolor="#e0e0e0">
+                <th>Variable</th>
+                <th>Directiva</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody id="dataTableBody">
+              <tr>
+                <td colspan="3" align="center">Presiona el botón "Mostrar Tabla" para generar.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <table border="1" width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
-          <thead>
-            <tr bgcolor="#e0e0e0">
-              <th>Variable</th>
-              <th>Directiva</th>
-              <th>Valor</th>
-            </tr>
-          </thead>
-          <tbody id="dataTableBody">
-            <tr>
-              <td colspan="3" align="center">Realiza el análisis semántico para generar variables.</td>
-            </tr>
-          </tbody>
-        </table>
+
+        <!-- Vista 2: Tabla de Código Ensamblador en 3 celdas (Etiqueta, Instrucción, Operandos) -->
+        <div id="ensambladorContainer" style="display: none; max-height: 250px; overflow-y: auto;">
+          <table id="asmTable" border="1" width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
+            <thead>
+              <tr bgcolor="#e0e0e0">
+                <th style="width: 25%;">Etiqueta</th>
+                <th style="width: 25%;">Instrucción</th>
+                <th style="width: 50%;">Operandos</th>
+              </tr>
+            </thead>
+            <tbody id="asmTableBody">
+              <tr>
+                <td colspan="3" align="center">Presiona "Generar Ensamblador" para ver el código en 3 celdas.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </td>
 
       <!-- Bloque 2: Tokens -->
@@ -74,7 +99,7 @@
           ⚠ <span id="errorMessage"></span>
         </div>
         
-        <div style="max-height: 50vh; overflow-y: auto; border: 1px solid #ccc;">
+        <div style="max-height: 70vh; overflow-y: auto; border: 1px solid #ccc;">
           <table border="1" width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse; margin: 0; border: none;">
             <thead>
               <tr bgcolor="#e0e0e0">
@@ -95,11 +120,9 @@
       <!-- Bloque 3: Parser -->
       <td valign="top" width="34%">
         <h2>3. Parser</h2>
-        
-        <div id="parserOutput" style="border: 1px solid #ccc; padding: 10px; background-color: #f9f9f9; min-height: 400px; white-space: pre-wrap;">
+        <div id="parserOutput" style="border: 1px solid #ccc; padding: 10px; background-color: #f9f9f9; min-height: 400px; max-height: 70vh; overflow-y: auto; white-space: pre-wrap;">
           Presiona el botón "Parser" para verificar la sintaxis.
         </div>
-
       </td>
     </tr>
   </table>
@@ -124,8 +147,8 @@
 LÉXICO:
 ID → LETRA [ LETRA | DIGITO ]*
 NUMERO → DIGITO [ DIGITO ]*
-CADENA → " [ CARACTER ]* "
-OPERADOR → @ | # | > | < | == | != | <= | >=
+CADENA → &quot; [ CARACTER ]* &quot;
+OPERADOR → @ | # | &gt; | &lt; | == | != | &lt;= | &gt;=
 ASIGNACIÓN → =
 DELIMITADOR → ; | ( | ) | { | }
       </pre>

@@ -182,25 +182,50 @@ export class Parser {
     return null;
   }
 
-  // 5. CONDICION → EXPRESION OPERADOR EXPRESION
+  // 5. CONDICION → EXPRESION OPERADOR_RELACIONAL EXPRESION | EXPRESION_BOOLEANA
   private condicion(): string {
-    this.expresion();
-    if (this.match('OPERADOR')) {
-      this.expresion();
+    const t1 = this.expresion();
+    const opToken = this.matchOperadorRelacional();
+    if (opToken) {
+      const t2 = this.expresion();
+      this.semantic.checkTypeMatch(t1, t2, opToken);
+      return 'boolean';
     } else {
-      this.addError('Se esperaba un operador relacional en la condición.');
+      if (t1 !== 'boolean' && t1 !== 'unknown') {
+        this.addError('Se esperaba un operador relacional en la condición.');
+      }
+      return 'boolean';
     }
-    return 'boolean';
   }
 
-  // 6. EXPRESION → VALOR | VALOR OPERADOR VALOR
+  // 6. EXPRESION → VALOR | VALOR OPERADOR_ARITMETICO VALOR
   private expresion(): string {
     const t1 = this.valor();
-    // Opcional operador y otro valor (para aritmética básica o lógica según grammar)
-    if (this.match('OPERADOR')) {
+    // Opcional operador aritmético y otro valor
+    if (this.matchOperadorAritmetico()) {
       this.valor();
     }
     return t1;
+  }
+
+  private matchOperadorAritmetico(): Token | null {
+    if (this.isAtEnd()) return null;
+    const t = this.peek();
+    if (t.tipo === 'OPERADOR' && (t.lexema === '@' || t.lexema === '#' || t.lexema === '+' || t.lexema === '-' || t.lexema === '*' || t.lexema === '/')) {
+      this.advance();
+      return t;
+    }
+    return null;
+  }
+
+  private matchOperadorRelacional(): Token | null {
+    if (this.isAtEnd()) return null;
+    const t = this.peek();
+    if (t.tipo === 'OPERADOR' && ['==', '!=', '<', '>', '<=', '>='].includes(t.lexema)) {
+      this.advance();
+      return t;
+    }
+    return null;
   }
 
   // 7. VALOR → NUMERO | CADENA | true | false | IDENTIFICADOR
