@@ -2,145 +2,111 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Scanner Léxico y Sintáctico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scanner y Parser · Autómatas</title>
 </head>
-<body style="font-family: monospace;">
-  <h1>Scanner y Parser Automatas</h1>
+<body>
+  <header class="toolbar">
+    <h1>Scanner y Parser <span>Autómatas</span></h1>
+    <div class="toolbar-actions">
+      <label for="exampleSelect">Ejemplos</label>
+      <select id="exampleSelect" aria-label="Cargar un programa de ejemplo"></select>
+      <button id="btnClear" type="button">Limpiar todo</button>
+    </div>
+  </header>
 
-  <!-- Top bar for basic actions -->
-  <div>
-    <button id="btnTokens">Tokens</button>
-    <button id="btnParser">Parser</button>
-    <button id="btnSemantic">Semántico</button>
-    <button id="btnIntermediate">Tabla Intermedia</button>
-    <button id="btnEnsambladorTop">Generar Ensamblador</button>
-    <button id="btnClear">Limpiar Todo</button>
-    &nbsp;|&nbsp;
-    Ejemplos: 
-    <select id="exampleSelect">
-      <option value="" disabled selected>Cargar Ejemplo...</option>
-    </select>
-  </div>
-  <br>
-
-  <!-- 3 Blocks layout -->
-  <table border="1" width="100%" cellpadding="10" cellspacing="0">
-    <tr>
-      <!-- Bloque 1: Programa y Código Intermedio / Ensamblador -->
-      <td valign="top" width="33%">
-        <h2>1. Programa</h2>
-        <table border="1" width="100%" cellpadding="5" cellspacing="0">
-          <tr>
-            <td valign="top" width="1%" align="right" bgcolor="#f0f0f0">
-              <div id="lineNumbers">1</div>
-            </td>
-            <td valign="top">
-              <textarea
-                id="codeEditor"
-                rows="22"
-                style="width: 100%; border: none; font-family: monospace; padding: 0; margin: 0; outline: none; resize: vertical;"
-                placeholder="Escribe el programa aquí..."></textarea>
-            </td>
-          </tr>
+  <main class="workspace">
+    <fieldset class="panel programa-panel">
+      <legend>Programa</legend>
+      <div class="editor-container">
+        <div id="lineNumbers" aria-hidden="true">1</div>
+        <textarea id="codeEditor" aria-label="Código del programa" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" placeholder="Escribe el programa aquí..."></textarea>
+      </div>
+    </fieldset>
+    <fieldset class="panel tokens-panel">
+      <legend>Tokens</legend>
+      <div class="panel-actions"><button id="btnTokens" type="button">Tokens</button></div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Tipo</th><th>Lexema</th><th>Línea</th></tr></thead>
+          <tbody id="tokensTableBody"><tr><td class="empty" colspan="3">Presiona «Tokens» para analizar.</td></tr></tbody>
         </table>
-        <br>
-        
-        <!-- Sección de Código Intermedio / Ensamblador abajo a la izquierda -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <h2 style="margin: 0;" id="intermediateTitle">Código Intermedio</h2>
-          <div style="display: flex; gap: 5px;">
-            <button id="btnShowIntermediate">Mostrar Tabla</button>
-            <button id="btnEnsamblador">Generar Ensamblador</button>
-            <button id="btnCopyAsm">Copiar</button>
-          </div>
-        </div>
-        
-        <!-- Vista 1: Tabla de variables Data -->
-        <div id="dataTableContainer" style="max-height: 250px; overflow-y: auto;">
-          <table id="dataTable" border="1" width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
-            <thead>
-              <tr bgcolor="#e0e0e0">
-                <th>Variable</th>
-                <th>Directiva</th>
-                <th>Valor</th>
-              </tr>
-            </thead>
-            <tbody id="dataTableBody">
-              <tr>
-                <td colspan="3" align="center">Presiona el botón "Mostrar Tabla" para generar.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      </div>
+    </fieldset>
+    <fieldset class="panel analisis-panel">
+      <legend>Análisis</legend>
+      <div class="panel-actions">
+        <button id="btnParser" type="button">Parser</button>
+        <button id="btnSemantic" type="button">Semántico</button>
+      </div>
+      <div id="parserOutput" class="analysis-output" role="status" aria-live="polite">Presiona «Parser» o «Semántico» para verificar el programa.</div>
+    </fieldset>
+    <fieldset class="panel error-panel">
+      <legend>Error</legend>
+      <div class="error-content" role="status" aria-live="polite">
+        <div id="errorBanner" style="display: none;"><strong id="errorMessage"></strong></div>
+        <div id="errorOutput" class="error-output"></div>
+      </div>
+    </fieldset>
+    <fieldset class="panel intermediate-panel">
+      <legend id="intermediateTitle">Código intermedio</legend>
+      <div class="panel-actions">
+        <button id="btnEnsamblador" type="button">Código intermedio</button>
+        <button id="btnCopyAsm" type="button">Copiar ensamblador</button>
+        <button id="btnShowIntermediate" class="secondary-action" type="button">Tabla de variables</button>
+      </div>
+      <div id="dataTableContainer" class="table-container" style="display: none;">
+        <table id="dataTable">
+          <thead><tr><th>Variable</th><th>Directiva</th><th>Valor</th></tr></thead>
+          <tbody id="dataTableBody"><tr><td class="empty" colspan="3">Presiona «Tabla de variables» para generar.</td></tr></tbody>
+        </table>
+      </div>
+      <div id="ensambladorContainer" class="table-container">
+        <table id="asmTable">
+          <thead><tr><th>Nombre</th><th>Operación</th><th>Atributos</th></tr></thead>
+          <tbody id="asmTableBody"><tr><td class="empty" colspan="3">Presiona «Código intermedio» para generar el ensamblador.</td></tr></tbody>
+        </table>
+      </div>
+    </fieldset>
+    <fieldset class="panel objeto-panel">
+      <legend>Código objeto</legend>
+      <div class="panel-actions">
+        <button id="btnCodigoObjeto" type="button">Código objeto</button>
+        <button id="btnCopyObjeto" type="button">Copiar código objeto</button>
+      </div>
+      <div id="codigoObjetoContainer" class="table-container">
+        <table id="codigoObjetoTable">
+          <thead><tr><th>Segmento</th><th>Dirección</th><th>Contenido</th><th>Hex</th></tr></thead>
+          <tbody id="codigoObjetoTableBody"><tr><td class="empty" colspan="4">Presiona «Código objeto» para generar los bytes del programa.</td></tr></tbody>
+        </table>
+      </div>
+      <p id="objetoNota" class="panel-note" hidden>@DATA = 0000h provisional; el enlazador resuelve el segmento. Listado didáctico, no archivo OBJ/EXE. Pasa el cursor sobre un byte para ver su instrucción.</p>
+    </fieldset>
+  </main>
 
-        <!-- Vista 2: Tabla de Código Ensamblador en 3 celdas (Etiqueta, Instrucción, Operandos) -->
-        <div id="ensambladorContainer" style="display: none; max-height: 250px; overflow-y: auto;">
-          <table id="asmTable" border="1" width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
-            <thead>
-              <tr bgcolor="#e0e0e0">
-                <th style="width: 25%;">Etiqueta</th>
-                <th style="width: 25%;">Instrucción</th>
-                <th style="width: 50%;">Operandos</th>
-              </tr>
-            </thead>
-            <tbody id="asmTableBody">
-              <tr>
-                <td colspan="3" align="center">Presiona "Generar Ensamblador" para ver el código en 3 celdas.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </td>
-
-      <!-- Bloque 2: Tokens -->
-      <td valign="top" width="33%">
-        <h2>2. Tokens</h2>
-        <div id="errorBanner" style="display: none; background-color: #ffcccc; color: red; border: 1px solid red; padding: 5px; margin-bottom: 10px;">
-          ⚠ <span id="errorMessage"></span>
-        </div>
-        
-        <div style="max-height: 70vh; overflow-y: auto; border: 1px solid #ccc;">
-          <table border="1" width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse; margin: 0; border: none;">
-            <thead>
-              <tr bgcolor="#e0e0e0">
-                <th style="position: sticky; top: 0; background-color: #e0e0e0; border-bottom: 1px solid #ccc; z-index: 1;">Tipo de Token</th>
-                <th style="position: sticky; top: 0; background-color: #e0e0e0; border-bottom: 1px solid #ccc; z-index: 1;">Lexema</th>
-                <th style="position: sticky; top: 0; background-color: #e0e0e0; border-bottom: 1px solid #ccc; z-index: 1;">Fila</th>
-              </tr>
-            </thead>
-            <tbody id="tokensTableBody">
-              <tr>
-                <td colspan="3" align="center">Presiona el botón "Tokens" para iniciar.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </td>
-
-      <!-- Bloque 3: Parser -->
-      <td valign="top" width="34%">
-        <h2>3. Parser</h2>
-        <div id="parserOutput" style="border: 1px solid #ccc; padding: 10px; background-color: #f9f9f9; min-height: 400px; max-height: 70vh; overflow-y: auto; white-space: pre-wrap;">
-          Presiona el botón "Parser" para verificar la sintaxis.
-        </div>
-      </td>
-    </tr>
-  </table>
-
-  <br>
-  
-  <!-- Grammar section (Hidden by default, simple toggle) -->
-  <fieldset>
-    <legend style="cursor: pointer;" id="grammarToggle">
-      <b>[+] Ver Gramática de Referencia</b>
-    </legend>
-    <div id="grammarContent" style="display: none; margin-top: 10px;">
+  <details class="reference" id="cuadroCodificacionBinaria">
+    <summary>Referencia de codificación Intel x86</summary>
+    <div class="reference-heading">
+      <p>Ejemplos de opcode, ModR/M y operandos en little endian. Esta tabla es una referencia independiente del programa.</p>
+      <button id="btnMachineCode" type="button">Codificación x86</button>
+      <button id="btnActualizarBinario" type="button">Actualizar tabla</button>
+    </div>
+    <div id="machineCodeContainer" class="table-container reference-table">
+      <table id="machineCodeTable">
+        <thead><tr><th>Instrucción ensamblador</th><th>Hexadecimal</th><th>Código binario</th><th>Desglose estructural Intel x86</th></tr></thead>
+        <tbody id="machineCodeTableBody"></tbody>
+      </table>
+    </div>
+  </details>
+  <section class="reference">
+    <button id="grammarToggle" type="button" aria-expanded="false" aria-controls="grammarContent">[+] Ver gramática de referencia</button>
+    <div id="grammarContent" style="display: none;">
       <pre>
 1. PROGRAMA      → INICIO LISTA_DECL FIN
 2. LISTA_DECL    → [ INSTRUCCION ]*
 3. INSTRUCCION   → TIPO IDENTIFICADOR = EXPRESION ; | IDENTIFICADOR = EXPRESION ; | print ( VALOR ) ; | leer ( IDENTIFICADOR ) ; | if ( CONDICION ) { LISTA_DECL } | while ( CONDICION ) { LISTA_DECL }
 4. TIPO          → int | boolean | string
-5. CONDICION     → EXPRESION OPERADOR EXPRESION
+5. CONDICION     → EXPRESION OPERADOR EXPRESION | EXPRESION_BOOLEANA
 6. EXPRESION     → VALOR | VALOR OPERADOR VALOR
 7. VALOR         → NUMERO | CADENA | true | false | IDENTIFICADOR
 ----------
@@ -150,11 +116,9 @@ NUMERO → DIGITO [ DIGITO ]*
 CADENA → &quot; [ CARACTER ]* &quot;
 OPERADOR → @ | # | &gt; | &lt; | == | != | &lt;= | &gt;=
 ASIGNACIÓN → =
-DELIMITADOR → ; | ( | ) | { | }
-      </pre>
+DELIMITADOR → ; | ( | ) | { | }</pre>
     </div>
-  </fieldset>
-
+  </section>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

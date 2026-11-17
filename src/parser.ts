@@ -37,6 +37,9 @@ export class Parser {
       if (!this.match('PALABRA_RESERVADA', 'FIN')) {
         this.addError('Se esperaba la palabra reservada "FIN" al final del programa.');
       }
+      if (!this.isAtEnd()) {
+        this.addError('No se permiten instrucciones después de "FIN".');
+      }
     } else {
       this.addError('El programa debe comenzar con la palabra reservada "INICIO".');
       // Intentamos continuar de todos modos para encontrar más errores
